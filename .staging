@@ -1,0 +1,8 @@
+    location / {
+        include   /etc/nginx/conf.d/php-fpm;
+
+		# the main router script
+		if (!-e $request_filename) {
+			rewrite ^/(.*)$ /index.php?q=$1 last;
+		}
+    }
