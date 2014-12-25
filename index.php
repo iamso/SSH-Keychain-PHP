@@ -3,7 +3,7 @@ date_default_timezone_set('Europe/Zurich');
 
 require_once(__DIR__ . '/lib/zaphpa/zaphpa.lib.php');
 require_once(__DIR__ . '/lib/savant/Savant3.php');
- 
+
 if (!file_exists('data')) {
 	mkdir('data', 0777, true);
 }
@@ -37,8 +37,8 @@ $router->addRoute(array(
 
 try {
   $router->route();
-} catch (Zaphpa_InvalidPathException $ex) {      
-  header("Content-Type: text/plain;", TRUE, 404);      
+} catch (Zaphpa_InvalidPathException $ex) {
+  header("Content-Type: text/plain;", TRUE, 404);
   die('Nothing found.');
 }
 
@@ -48,12 +48,12 @@ class Main {
 	function __construct() {
 		$this->tpl = new Savant3();
 		$this->file_db = new PDO('sqlite:data/db.sqlite3');
-		$this->file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		$this->file_db->setAttribute(PDO::ATTR_ERRMODE,
 		                        PDO::ERRMODE_EXCEPTION);
 		$this->file_db->exec("CREATE TABLE IF NOT EXISTS keys (
 			                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			                email TEXT, 
-			                key TEXT, 
+			                email TEXT,
+			                key TEXT,
 			                created INTEGER
 			                )");
 	}
@@ -79,6 +79,7 @@ class Main {
 	public function create($req, $res) {
 		$data = json_decode($req->data['_RAW_HTTP_DATA']);
 		$this->file_db->query('INSERT INTO keys (email, key, created) VALUES ("'.$req->params['email'].'", "'.$data->key.'", '.time().')');
+		$res->add($this->get_fingerprint($data->key) . "\n");
 		$res->send(200, 'txt');
 	}
 	public function get($req, $res) {
@@ -97,6 +98,7 @@ class Main {
 		$rows = $result->fetchAll();
 		if (count($rows) === 1) {
 			$this->tpl->key = $rows[0]['key'];
+			$this->tpl->fingerprint = $this->get_fingerprint($rows[0]['key']);
 			$res->add($this->tpl->fetch('views/install.tpl.php'));
 		}
 		else {
@@ -108,8 +110,7 @@ class Main {
 		$result = $this->file_db->query('SELECT * FROM keys WHERE email="'.$req->params['email'].'"');
 		$rows = $result->fetchAll();
 		if (count($rows) === 1) {
-			$content = explode(' ', $rows[0]['key'], 3);
-			$res->add(join(':', str_split(md5(base64_decode($content[1])), 2)) . "\n");
+			$res->add($this->get_fingerprint($rows[0]['key']) . "\n");
 		}
 		else {
 			$res->add('No key found.');
@@ -123,4 +124,8 @@ class Main {
 			$_SERVER['SERVER_NAME'].'/'
 		);
 	}
+  private function get_fingerprint($key) {
+    $content = explode(' ', $key, 3);
+    return join(':', str_split(md5(base64_decode($content[1])), 2));
+  }
 }
