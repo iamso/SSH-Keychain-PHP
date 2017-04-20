@@ -19,20 +19,20 @@ $router->addRoute(array(
   'get'      => array('Main', 'upload'),
 ));
 $router->addRoute(array(
-  'path'     => '/{email}',
-  'put'      => array('Main', 'create'),
-));
-$router->addRoute(array(
-  'path'     => '/{email}',
-  'get'      => array('Main', 'get'),
-));
-$router->addRoute(array(
   'path'     => '/{email}/install',
   'get'      => array('Main', 'install'),
 ));
 $router->addRoute(array(
   'path'     => '/{email}/fingerprint',
   'get'      => array('Main', 'fingerprint'),
+));
+$router->addRoute(array(
+  'path'     => '/{email}',
+  'put'      => array('Main', 'create'),
+));
+$router->addRoute(array(
+  'path'     => '/{email}',
+  'get'      => array('Main', 'get'),
 ));
 
 try {
@@ -76,24 +76,7 @@ class Main {
 		}
 		$res->send(200, 'txt');
 	}
-	public function create($req, $res) {
-		$data = json_decode($req->data['_RAW_HTTP_DATA']);
-		$this->file_db->query('INSERT INTO keys (email, key, created) VALUES ("'.$req->params['email'].'", "'.$data->key.'", '.time().')');
-		$res->add($this->get_fingerprint($data->key) . "\n");
-		$res->send(200, 'txt');
-	}
-	public function get($req, $res) {
-		$result = $this->file_db->query('SELECT * FROM keys WHERE email="'.$req->params['email'].'"');
-		$rows = $result->fetchAll();
-		if (count($rows) === 1) {
-			$res->add($rows[0]['key']);
-		}
-		else {
-			$res->add('No key found.');
-		}
-		$res->send(200, 'txt');
-	}
-	public function install($req, $res) {
+  public function install($req, $res) {
 		$result = $this->file_db->query('SELECT * FROM keys WHERE email="'.$req->params['email'].'"');
 		$rows = $result->fetchAll();
 		if (count($rows) === 1) {
@@ -117,6 +100,24 @@ class Main {
 		}
 		$res->send(200, 'txt');
 	}
+	public function create($req, $res) {
+		$data = json_decode($req->data['_RAW_HTTP_DATA']);
+		$this->file_db->query('INSERT INTO keys (email, key, created) VALUES ("'.$req->params['email'].'", "'.$data->key.'", '.time().')');
+		$res->add($this->get_fingerprint($data->key) . "\n");
+		$res->send(200, 'txt');
+	}
+	public function get($req, $res) {
+		$result = $this->file_db->query('SELECT * FROM keys WHERE email="'.$req->params['email'].'"');
+		$rows = $result->fetchAll();
+		if (count($rows) === 1) {
+			$res->add($rows[0]['key']);
+		}
+		else {
+			$res->add('No key found.');
+		}
+		$res->send(200, 'txt');
+	}
+
 	private function base_url() {
 		return sprintf(
 			"%s://%s",
