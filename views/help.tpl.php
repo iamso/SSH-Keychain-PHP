@@ -1,6 +1,11 @@
 How to use
 ----------
 
+upload and install your public ssh key with ease.
+
+// help
+<?=$this->url?><?=$this->email?>/help
+
 // upload
 curl -sk <?=$this->url?><?=$this->email?>/upload | bash
 

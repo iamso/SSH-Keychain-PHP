@@ -11,6 +11,10 @@ if (!file_exists('data')) {
 $router = new Zaphpa_Router();
 
 $router->addRoute(array(
+  'path'     => '/',
+  'get'      => array('Main', 'main'),
+));
+$router->addRoute(array(
   'path'     => '/{email}/help',
   'get'      => array('Main', 'help'),
 ));
@@ -56,6 +60,12 @@ class Main {
 			                key TEXT,
 			                created INTEGER
 			                )");
+	}
+  public function main($req, $res) {
+		$this->tpl->url = $this->base_url();
+		$this->tpl->email = "your@email.tld";
+		$res->add($this->tpl->fetch('views/help.tpl.php'));
+		$res->send(200, 'txt');
 	}
 	public function help($req, $res) {
 		$this->tpl->url = $this->base_url();
